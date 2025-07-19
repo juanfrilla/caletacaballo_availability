@@ -18,8 +18,12 @@ calendar_options = {
     "firstDay": 1,
     "editable": True,
     "selectable": True,
-    "dayMaxEvents": True,
+    "dayMaxEvents": False,  # allow full event stack display
+    "eventDisplay": "block",  # <--- FORCE events to show as blocks with text
     "locale": "es",
+    "height": "auto",
+    "contentHeight": "auto",
+    "aspectRatio": 0.75,  # makes it taller on narrow screens
     "headerToolbar": {
         "left": "prev,next today",
         "center": "title",
@@ -30,8 +34,8 @@ calendar_options = {
         "month": "Mes",
         "week": "Semana",
         "day": "Día",
-        "prev": "← Mes Ant.",
-        "next": "Mes Sig. →",
+        "prev": "←",
+        "next": "→",
     },
 }
 
