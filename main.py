@@ -25,6 +25,14 @@ calendar_options = {
         "center": "title",
         "right": "dayGridMonth,timeGridWeek",
     },
+    "buttonText": {
+        "today": "Hoy",
+        "month": "Mes",
+        "week": "Semana",
+        "day": "Día",
+        "prev": "← Mes Ant.",
+        "next": "Mes Sig. →",
+    },
 }
 
 
