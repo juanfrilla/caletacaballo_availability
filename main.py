@@ -41,8 +41,9 @@ def create_calendar_event(date_str: str, is_available: bool):
         "title": "Libre" if is_available else "Ocupado",
         "start": date_str,
         "end": date_str,
-        "backgroundColor": ("#2ecc71" if is_available else "#e74c3c"),
+        "backgroundColor": "#2ecc71" if is_available else "#e74c3c",
         "borderColor": "#2ecc71" if is_available else "#e74c3c",
+        "textColor": "#ffffff",
     }
 
 
@@ -102,6 +103,7 @@ def generate_calendar_events():
                         "end": date_str,
                         "backgroundColor": "#808080",
                         "borderColor": "#808080",
+                        "textColor": "#ffffff",
                     }
                 )
 
