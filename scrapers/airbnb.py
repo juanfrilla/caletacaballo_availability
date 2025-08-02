@@ -1,3 +1,4 @@
+import re
 import json
 
 from bs4 import BeautifulSoup
@@ -11,6 +12,31 @@ def from_timestamp_to_human_readable(timestamp_ms):
     dt = datetime.fromtimestamp(timestamp_s)
 
     return dt.strftime("%d-%m-%Y")
+
+
+def js_calculed_hash_request():
+    headers = {
+        "Host": "a0.muscache.com",
+        "Origin": "https://www.airbnb.es",
+        "Sec-Ch-Ua-Platform": '"Windows"',
+        "Accept-Language": "es-ES,es;q=0.9",
+        "Sec-Ch-Ua": '"Not)A;Brand";v="8", "Chromium";v="138"',
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Accept": "*/*",
+        "Sec-Fetch-Site": "cross-site",
+        "Sec-Fetch-Mode": "cors",
+        "Sec-Fetch-Dest": "script",
+        "Referer": "https://www.airbnb.es/",
+        # 'Accept-Encoding': 'gzip, deflate, br',
+    }
+
+    response = requests.get(
+        "https://a0.muscache.com/airbnb/static/packages/web/es/4ed3.9d8d5b7b50.js",
+        headers=headers,
+        impersonate="chrome131",
+    )
+    return response.text
 
 
 def tokens_request():
@@ -38,9 +64,14 @@ def parse_tokens_json(soup: BeautifulSoup):
         return json.loads(json_text)
 
 
-def check_availability(tokens_json):
+def parse_operation_id(text) -> str:
+    match = re.search(r"operationId:'([0-9a-f]+)'", text)
+    if match:
+        return match.group(1)
 
-    burp0_url = "https://www.airbnb.es:443/api/v3/PdpAvailabilityCalendar/8f08e03c7bd16fcad3c92a3592c19a8b559a0d0855a84028d1163d4733ed9ade?operationName=PdpAvailabilityCalendar&locale=es&currency=EUR&variables=%7B%22request%22%3A%7B%22count%22%3A12%2C%22listingId%22%3A%221188452677662328694%22%2C%22month%22%3A7%2C%22year%22%3A2025%7D%7D&extensions=%7B%22persistedQuery%22%3A%7B%22version%22%3A1%2C%22sha256Hash%22%3A%228f08e03c7bd16fcad3c92a3592c19a8b559a0d0855a84028d1163d4733ed9ade%22%7D%7D"
+
+def check_availability(tokens_json, hash_id: str):
+
     burp0_headers = {
         "X-Airbnb-Api-Key": tokens_json.get("layout-init").get("api_config").get("key"),
         "X-Airbnb-Supports-Airlock-V2": "true",
@@ -71,7 +102,25 @@ def check_availability(tokens_json):
         "Accept-Encoding": "gzip, deflate, br",
         "Priority": "u=1, i",
     }
-    response = requests.get(burp0_url, headers=burp0_headers, impersonate="chrome131")
+    month = datetime.now().month
+    year = datetime.now().year
+    params = {
+        "operationName": "PdpAvailabilityCalendar",
+        "locale": "es",
+        "currency": "EUR",
+        "variables": (
+            f'{{"request":{{"count":12,"listingId":"1188452677662328694","month":{month},"year":{year}}}}}'
+        ),
+        "extensions": f'{{"persistedQuery":{{"version":1,"sha256Hash":"{hash_id}"}}}}',
+    }
+    url = f"https://www.airbnb.es/api/v3/PdpAvailabilityCalendar/{hash_id}"
+
+    response = requests.get(
+        url,
+        headers=burp0_headers,
+        impersonate="chrome131",
+        params=params,
+    )
     return response.json()
 
 
@@ -96,5 +145,7 @@ def scrape():
     tokens_response = tokens_request()
     soup = BeautifulSoup(tokens_response.text, "html.parser")
     tokens_json = parse_tokens_json(soup)
-    response_json = check_availability(tokens_json)
+    calculed_hash_text = js_calculed_hash_request()
+    calculed_hash = parse_operation_id(calculed_hash_text)
+    response_json = check_availability(tokens_json, calculed_hash)
     return create_airbnb_data(response_json)
