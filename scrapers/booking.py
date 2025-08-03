@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from curl_cffi import requests
 
 
-def tokens_request():
+def tokens_request(session: requests.Session):
 
     burp0_url = "https://www.booking.com:443/hotel/es/la-casita-del-mar-caleta-de-caballo.es.html"
     burp0_headers = {
@@ -26,7 +26,7 @@ def tokens_request():
         "Priority": "u=0, i",
         "Connection": "keep-alive",
     }
-    response = requests.get(burp0_url, headers=burp0_headers, impersonate="chrome131")
+    response = session.get(burp0_url, headers=burp0_headers, impersonate="chrome131")
     return response
 
 
@@ -35,7 +35,9 @@ def is_available(day_info):
 
 
 def check_availability_booking(
-    tokens_json: dict, start_date=datetime.now().strftime("%Y-%m-%d")
+    session: requests.Session,
+    tokens_json: dict,
+    start_date=datetime.now().strftime("%Y-%m-%d"),
 ):
     burp0_url = "https://www.booking.com:443/dml/graphql?lang=es"
     burp0_headers = {
@@ -87,7 +89,7 @@ def check_availability_booking(
             }
         },
     }
-    response = requests.post(
+    response = session.post(
         burp0_url, headers=burp0_headers, json=burp0_json, impersonate="chrome131"
     )
     return response.json()
@@ -112,13 +114,16 @@ def create_booking_data(days: list):
 
 
 def scrape():
+    session = requests.Session()
     days = []
-    response = tokens_request()
+    response = tokens_request(session)
     soup = BeautifulSoup(response.text, "html.parser")
     tokens_json = parse_tokens_json(soup)
     _12_months = generate_12_months_list()
     for date_str in _12_months:
-        rjson = check_availability_booking(tokens_json=tokens_json, start_date=date_str)
+        rjson = check_availability_booking(
+            session=session, tokens_json=tokens_json, start_date=date_str
+        )
         days_to_append = rjson.get("data").get("availabilityCalendar").get("days")
         days += days_to_append
     booking_data = create_booking_data(days)
