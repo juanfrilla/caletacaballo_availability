@@ -1,3 +1,4 @@
+import time
 import json
 
 from utils import generate_12_months_list
@@ -11,12 +12,12 @@ def tokens_request(session: requests.Session):
 
     burp0_url = "https://www.booking.com:443/hotel/es/la-casita-del-mar-caleta-de-caballo.es.html"
     burp0_headers = {
-        "Sec-Ch-Ua": '"Not)A;Brand";v="8", "Chromium";v="131"',
+        "Sec-Ch-Ua": '"Not)A;Brand";v="8", "Chromium";v="136"',
         "Sec-Ch-Ua-Mobile": "?0",
         "Sec-Ch-Ua-Platform": '"Windows"',
         "Accept-Language": "es-ES,es;q=0.9",
         "Upgrade-Insecure-Requests": "1",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
         "Sec-Fetch-Site": "none",
         "Sec-Fetch-Mode": "navigate",
@@ -26,7 +27,30 @@ def tokens_request(session: requests.Session):
         "Priority": "u=0, i",
         "Connection": "keep-alive",
     }
-    response = session.get(burp0_url, headers=burp0_headers, impersonate="chrome131")
+    response = session.get(burp0_url, headers=burp0_headers, impersonate="chrome136")
+    return response
+
+
+def set_cookies_request(session: requests.Session):
+
+    burp0_url = "https://www.booking.com"
+    burp0_headers = {
+        "Sec-Ch-Ua": '"Not)A;Brand";v="8", "Chromium";v="136"',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": '"Windows"',
+        "Accept-Language": "es-ES,es;q=0.9",
+        "Upgrade-Insecure-Requests": "1",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        "Sec-Fetch-Site": "none",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-User": "?1",
+        "Sec-Fetch-Dest": "document",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Priority": "u=0, i",
+        "Connection": "keep-alive",
+    }
+    response = session.get(burp0_url, headers=burp0_headers, impersonate="chrome136")
     return response
 
 
@@ -45,7 +69,7 @@ def check_availability_booking(
         "Sec-Ch-Ua-Platform": '"Windows"',
         "X-Booking-Context-Action-Name": "hotel",
         "X-Booking-Context-Action": "hotel",
-        "Sec-Ch-Ua": '"Not)A;Brand";v="8", "Chromium";v="131"',
+        "Sec-Ch-Ua": '"Not)A;Brand";v="8", "Chromium";v="136"',
         "X-Booking-Site-Type-Id": "1",
         "Sec-Ch-Ua-Mobile": "?0",
         "X-Booking-Et-Serialized-State": tokens_json.get("etSerializedState"),
@@ -59,7 +83,7 @@ def check_availability_booking(
         "X-Apollo-Operation-Name": "AvailabilityCalendar",
         "X-Booking-Pageview-Id": "551f8741a6ab08a2",
         "Accept-Language": "es-ES,es;q=0.9",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
         "Origin": "https://www.booking.com",
         "Sec-Fetch-Site": "same-origin",
         "Sec-Fetch-Mode": "cors",
@@ -90,7 +114,7 @@ def check_availability_booking(
         },
     }
     response = session.post(
-        burp0_url, headers=burp0_headers, json=burp0_json, impersonate="chrome131"
+        burp0_url, headers=burp0_headers, json=burp0_json, impersonate="chrome136"
     )
     return response.json()
 

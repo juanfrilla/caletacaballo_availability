@@ -1,6 +1,8 @@
 from datetime import datetime, date
 import json
 
+import calendar
+
 
 def generate_12_months_list(start_date=datetime.now().date()):
     months_list = []
@@ -9,7 +11,11 @@ def generate_12_months_list(start_date=datetime.now().date()):
     day = start_date.day
 
     for _ in range(12):
-        months_list.append(date(year, month, day).strftime("%Y-%m-%d"))
+        last_day = calendar.monthrange(year, month)[1]
+        valid_day = min(day, last_day)
+
+        months_list.append(date(year, month, valid_day).strftime("%Y-%m-%d"))
+
         month += 1
         if month > 12:
             month = 1
