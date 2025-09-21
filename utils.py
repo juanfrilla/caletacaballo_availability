@@ -93,6 +93,8 @@ def open_browser():
         "--disable-blink-features=AutomationControlled",
         "--start-maximized",
         "--disable-dev-shm-usage",
+        "--headless",
+        "--disable-gpu",
     ]
     for argument in arguments:
         options.add_argument(argument)
