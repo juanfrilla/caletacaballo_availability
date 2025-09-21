@@ -1,34 +1,21 @@
-import time
 import json
-
-from utils import generate_12_months_list
-
 from datetime import datetime
+
 from bs4 import BeautifulSoup
 from curl_cffi import requests
 
+from utils import generate_12_months_list, render_html
 
-def tokens_request(session: requests.Session):
+
+def tokens_request():
 
     burp0_url = "https://www.booking.com:443/hotel/es/la-casita-del-mar-caleta-de-caballo.es.html"
-    burp0_headers = {
-        "Sec-Ch-Ua": '"Not)A;Brand";v="8", "Chromium";v="136"',
-        "Sec-Ch-Ua-Mobile": "?0",
-        "Sec-Ch-Ua-Platform": '"Windows"',
-        "Accept-Language": "es-ES,es;q=0.9",
-        "Upgrade-Insecure-Requests": "1",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-        "Sec-Fetch-Site": "none",
-        "Sec-Fetch-Mode": "navigate",
-        "Sec-Fetch-User": "?1",
-        "Sec-Fetch-Dest": "document",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Priority": "u=0, i",
-        "Connection": "keep-alive",
-    }
-    response = session.get(burp0_url, headers=burp0_headers, impersonate="chrome136")
-    return response
+    text = render_html(
+        burp0_url,
+        tag_to_wait='script[data-capla-application-context="data-capla-application-context"]',
+        timeout=10,
+    )
+    return text
 
 
 def set_cookies_request(session: requests.Session):
@@ -140,8 +127,8 @@ def create_booking_data(days: list):
 def scrape():
     session = requests.Session()
     days = []
-    response = tokens_request(session)
-    soup = BeautifulSoup(response.text, "html.parser")
+    text = tokens_request()
+    soup = BeautifulSoup(text, "html.parser")
     tokens_json = parse_tokens_json(soup)
     _12_months = generate_12_months_list()
     for date_str in _12_months:
