@@ -56,15 +56,14 @@ def get_driver():
 
     options = webdriver.ChromeOptions()
 
-    arguments = [
-        "--enable-features=NetworkService,NetworkServiceInProcess",
-        "--no-sandbox",
-        "--disable-blink-features=AutomationControlled",
-        "--start-maximized",
-        "--headless",
-    ]
-    for argument in arguments:
-        options.add_argument(argument)
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-features=NetworkService")
+    options.add_argument("--window-size=1920x1080")
+    options.add_argument("--disable-features=VizDisplayCompositor")
+    options.add_argument('--ignore-certificate-errors')
 
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
 
@@ -81,25 +80,3 @@ def render_html(url, tag_to_wait=None, timeout=10):
             EC.presence_of_element_located((By.CSS_SELECTOR, tag_to_wait))
         )
     return driver.page_source
-
-
-def open_browser():
-
-    options = webdriver.ChromeOptions()
-
-    arguments = [
-        "--enable-features=NetworkService,NetworkServiceInProcess",
-        "--no-sandbox",
-        "--disable-blink-features=AutomationControlled",
-        "--start-maximized",
-        "--disable-dev-shm-usage",
-        "--headless",
-        "--disable-gpu",
-    ]
-    for argument in arguments:
-        options.add_argument(argument)
-
-    options.add_experimental_option("excludeSwitches", ["enable-automation"])
-
-    browser = webdriver.Chrome(options=options)
-    return browser
