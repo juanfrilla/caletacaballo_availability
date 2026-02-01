@@ -1,6 +1,7 @@
 **/__pycache__/
 .venv/
 venv/
-*.json
+airbnb.json
+booking.json
 .ruff_cache
 *.log
