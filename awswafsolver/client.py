@@ -101,7 +101,7 @@ class AWSWAFSolver:
         )
 
     def retrieve_session(self) -> requests.Session:
-        first_response = self._general_request(self.base_url)
+        first_response = self._general_request(self.target_url)
         soup = BeautifulSoup(first_response.text, "html.parser")
         challenge_url = self._parse_challenge_url(soup)
         self._general_request(challenge_url)
@@ -113,7 +113,7 @@ class AWSWAFSolver:
         challenge = challenge_rjson.get("challenge", {})
         challenge_token = challenge.get("input")
         verify_url = challenge_url.replace("challenge.js", "verify")
-        verify_fp = adjust_fp(self.chrome_version)
+        verify_fp = adjust_fp(self.chrome_version, self.target_url)
         verify_json_str = json.dumps(
             verify_fp, separators=(",", ":"), ensure_ascii=False
         )

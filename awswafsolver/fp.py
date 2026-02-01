@@ -10,7 +10,7 @@ def read_json(path: str):
     return data
 
 
-def adjust_fp(chrome_version: str) -> dict:
+def adjust_fp(chrome_version: str, target_url: str) -> dict:
     fp_template = read_json("./awswafsolver/fp.json")
     now_timestamp = int(time.time() * 1000)
     duration = random.randint(1, 10)
@@ -19,5 +19,6 @@ def adjust_fp(chrome_version: str) -> dict:
     fp_template["userAgent"] = (
         f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{chrome_version}.0.0.0 Safari/537.36"  # TODO constants chrome version
     )
+    fp_template["location"] = target_url
     fp_template["id"] = str(uuid.uuid4())
     return fp_template
