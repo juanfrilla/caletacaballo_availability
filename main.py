@@ -1,12 +1,12 @@
-import os
-import json
-import time
 import datetime
-import streamlit as st
-from streamlit_calendar import calendar
-from scrapers.airbnb import scrape as scrape_airbnb
-from scrapers.booking import scrape as scrape_booking
+import json
+import os
+import time
 
+from streamlit_calendar import calendar
+
+from scrapers.airbnb import AirbnbScraper
+from scrapers.booking import BookingScraper
 
 CACHE_TTL_SECONDS = 3600
 BOOKING_CACHE_PATH = "data/airbnb.json"
@@ -18,12 +18,12 @@ calendar_options = {
     "firstDay": 1,
     "editable": True,
     "selectable": True,
-    "dayMaxEvents": False,  # allow full event stack display
-    "eventDisplay": "block",  # <--- FORCE events to show as blocks with text
+    "dayMaxEvents": False,
+    "eventDisplay": "block",
     "locale": "es",
     "height": "auto",
     "contentHeight": "auto",
-    "aspectRatio": 0.75,  # makes it taller on narrow screens
+    "aspectRatio": 0.75,
     "headerToolbar": {
         "left": "prev,next today",
         "center": "title",
@@ -70,18 +70,20 @@ def scrape_booking_cached():
     cached = load_cache(BOOKING_CACHE_PATH)
     if cached is not None:
         return cached
-    scraped = scrape_booking()
-    save_cache(BOOKING_CACHE_PATH, scraped)
-    return scraped
+    booking = BookingScraper()
+    scraped_data = booking.scrape()
+    save_cache(BOOKING_CACHE_PATH, scraped_data)
+    return scraped_data
 
 
 def scrape_airbnb_cached():
     cached = load_cache(AIRBNB_CACHE_PATH)
     if cached is not None:
         return cached
-    scraped = scrape_airbnb()
-    save_cache(AIRBNB_CACHE_PATH, scraped)
-    return scraped
+    airbnb = AirbnbScraper()
+    scraped_data = airbnb.scrape()
+    save_cache(AIRBNB_CACHE_PATH, scraped_data)
+    return scraped_data
 
 
 def generate_calendar_events():
