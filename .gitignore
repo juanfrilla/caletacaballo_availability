@@ -3,3 +3,4 @@
 venv/
 *.json
 .ruff_cache
+*.log

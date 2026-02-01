@@ -4,13 +4,14 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 
 from awswafsolver.client import AWSWAFSolver
+from constants import CHROME_VERSION
 from utils import generate_12_months_list
 
 
 class BookingScraper:
     def __init__(self):
         target_url = "https://www.booking.com/hotel/es/la-casita-del-mar-caleta-de-caballo.es.html"
-        self.chrome_version = "131"
+        self.chrome_version = CHROME_VERSION
         solver = AWSWAFSolver(target_url, self.chrome_version)
         self.session = solver.retrieve_session()
 

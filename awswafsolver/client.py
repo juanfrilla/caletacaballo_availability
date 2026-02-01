@@ -4,6 +4,8 @@ from urllib.parse import urlparse
 from bs4 import BeautifulSoup
 from curl_cffi import requests
 
+from logger import get_logger
+
 from .checksum import crc32_calculate, get_check_sum, utf8_encoder_encode
 from .fp import adjust_fp
 from .metrics import generate_verify_metrics
@@ -18,8 +20,9 @@ class AWSWAFSolver:
         self.target_url = target_url
         parsed = urlparse(target_url)
         self.base_url = f"{parsed.scheme}://{parsed.netloc}"
+        self.logger = get_logger("awswaf")
 
-    def general_request(self, url: str) -> requests.Response:
+    def _general_request(self, url: str) -> requests.Response:
         headers = {
             "Ect": "4g",
             "Sec-Ch-Ua": f'"Not(A:Brand";v="8", "Chromium";v="{self.chrome_version}"',
@@ -45,7 +48,7 @@ class AWSWAFSolver:
         )
         return response
 
-    def parse_challenge_url(self, soup: BeautifulSoup):
+    def _parse_challenge_url(self, soup: BeautifulSoup):
         challenge_script = soup.find("script", src=lambda x: x and "challenge.js" in x)
 
         if challenge_script:
@@ -53,7 +56,7 @@ class AWSWAFSolver:
             return challenge_url
         return ""
 
-    def verify_request(
+    def _verify_request(
         self,
         verify_url: str,
         challenge: dict,
@@ -98,14 +101,14 @@ class AWSWAFSolver:
         )
 
     def retrieve_session(self) -> requests.Session:
-        first_response = self.general_request(self.base_url)
+        first_response = self._general_request(self.base_url)
         soup = BeautifulSoup(first_response.text, "html.parser")
-        challenge_url = self.parse_challenge_url(soup)
-        self.general_request(challenge_url)
+        challenge_url = self._parse_challenge_url(soup)
+        self._general_request(challenge_url)
         challenge_request_url = challenge_url.replace(
             "challenge.js", "inputs?client=browser"
         )
-        challenge_response = self.general_request(challenge_request_url)
+        challenge_response = self._general_request(challenge_request_url)
         challenge_rjson = challenge_response.json()
         challenge = challenge_rjson.get("challenge", {})
         challenge_token = challenge.get("input")
@@ -122,7 +125,7 @@ class AWSWAFSolver:
         verify_signals = prepare_signals(verify_zoey_str)
         solution = solve_challenge(challenge_token, verify_checksum)
         verify_metrics = generate_verify_metrics()
-        verify_response = self.verify_request(
+        verify_response = self._verify_request(
             verify_url,
             challenge,
             verify_checksum,
@@ -132,5 +135,7 @@ class AWSWAFSolver:
         )
         verify_rjson = verify_response.json()
         verify_token = verify_rjson.get("token")
+        self.logger.info(f"Retrieved token {verify_token}")
+
         self.session.cookies.set("aws-waf-token", verify_token)
         return self.session

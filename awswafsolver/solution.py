@@ -45,7 +45,7 @@ def solve_challenge(challenge_token: str, checksum: str) -> dict:
     method = challenge_map.get(challenge_type)
 
     if not method:
-        raise ValueError(f"Tipo de challenge no soportado: {challenge_type}")
+        raise ValueError(f"Unsuported challenge_type: {challenge_type}")
     difficulty = jwt_dict.get("difficulty")
     return method(challenge_token, checksum, difficulty)
 

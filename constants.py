@@ -1,0 +1,2 @@
+CHROME_VERSION = "131"
+LOG_DIR = "logs"
