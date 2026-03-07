@@ -5,4 +5,5 @@ https://caletacaballo.streamlit.app/
 
 
 
-NOTE: Not working, when I have time, I'll try to reverse engineering again and leave it working again.
+
+NOTE: AWSWAF did an update, sometimes is not working, when I have time, I'll try to reverse engineering again and leave it working again.
