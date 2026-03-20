@@ -2,8 +2,3 @@ Check when my apartment is available scraping airbnb and booking (no browser nee
 
 Visit this website to see this project running:
 https://caletacaballo.streamlit.app/
-
-
-
-
-NOTE: AWSWAF did an update, sometimes is not working, when I have time, I'll try to reverse engineering again and leave it working again.

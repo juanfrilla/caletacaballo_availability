@@ -2,7 +2,7 @@ import json
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup
-from curl_cffi import requests
+from curl_cffi import CurlMime, requests
 
 from logger import get_logger
 
@@ -10,7 +10,7 @@ from .checksum import crc32_calculate, get_check_sum, utf8_encoder_encode
 from .fp import adjust_fp
 from .metrics import generate_verify_metrics
 from .signals import encrypt_zoey, prepare_signals
-from .solution import solve_challenge
+from .solution import retrieve_dict_from_jwttoken, solve_challenge
 
 
 class AWSWAFSolver:
@@ -100,6 +100,61 @@ class AWSWAFSolver:
             impersonate=f"chrome{self.chrome_version}",
         )
 
+    def _mp_verify_request(
+        self,
+        mp_verify_url,
+        challenge,
+        verify_checksum,
+        verify_metrics,
+        verify_signals,
+        solution,
+    ):
+        burp0_headers = {
+            "Sec-Ch-Ua-Platform": '"Windows"',
+            "Accept-Language": "es-ES,es;q=0.9",
+            "Sec-Ch-Ua": f'"Not(A:Brand";v="8", "Chromium";v="{self.chrome_version}"',
+            "Sec-Ch-Ua-Mobile": "?0",
+            "User-Agent": f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{self.chrome_version}.0.0.0 Safari/537.36",
+            "Accept": "*/*",
+            "Origin": self.base_url,
+            "Sec-Fetch-Site": "cross-site",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Dest": "empty",
+            "Referer": self.base_url,
+            "Accept-Encoding": "gzip, deflate, br",
+            "Priority": "u=1, i",
+        }
+        solution_metadata = {
+            "challenge": challenge,
+            "solution": None,
+            "signals": verify_signals,
+            "checksum": verify_checksum,
+            "existing_token": None,
+            "client": "Browser",
+            "domain": "booking.com",
+            "metrics": verify_metrics,
+        }
+        mp = CurlMime.from_list(
+            [
+                {
+                    "name": "solution_data",
+                    "data": solution,
+                },
+                {"name": "solution_metadata", "data": json.dumps(solution_metadata)},
+            ]
+        )
+
+        try:
+            response = self.session.post(
+                mp_verify_url,
+                headers=burp0_headers,
+                multipart=mp,
+                impersonate=f"chrome{self.chrome_version}",
+            )
+            return response
+        finally:
+            mp.close()
+
     def retrieve_session(self) -> requests.Session:
         first_response = self._general_request(self.target_url)
         soup = BeautifulSoup(first_response.text, "html.parser")
@@ -113,6 +168,7 @@ class AWSWAFSolver:
         challenge = challenge_rjson.get("challenge", {})
         challenge_token = challenge.get("input")
         verify_url = challenge_url.replace("challenge.js", "verify")
+        mp_verify_url = challenge_url.replace("challenge.js", "mp_verify")
         verify_fp = adjust_fp(self.chrome_version, self.target_url)
         verify_json_str = json.dumps(
             verify_fp, separators=(",", ":"), ensure_ascii=False
@@ -123,16 +179,33 @@ class AWSWAFSolver:
         verify_checksum_fp = f"{verify_checksum}#{verify_json_str}"
         verify_zoey_str = encrypt_zoey(verify_checksum_fp)
         verify_signals = prepare_signals(verify_zoey_str)
-        solution = solve_challenge(challenge_token, verify_checksum)
         verify_metrics = generate_verify_metrics()
-        verify_response = self._verify_request(
-            verify_url,
-            challenge,
-            verify_checksum,
-            verify_metrics,
-            verify_signals,
-            solution,
-        )
+        solution = solve_challenge(challenge_token, verify_checksum)
+
+        jwt_dict = retrieve_dict_from_jwttoken(challenge_token)
+
+        challenge_type = jwt_dict.get("challenge_type")
+        self.logger.info(f"Challenge type is {challenge_type}")
+        if challenge_type in ["HashcashScrypt", "HashcashSHA2"]:
+            verify_response = self._verify_request(
+                verify_url,
+                challenge,
+                verify_checksum,
+                verify_metrics,
+                verify_signals,
+                solution,
+            )
+
+        elif challenge_type == "NetworkBandwidth":
+            verify_response = self._mp_verify_request(
+                mp_verify_url,
+                challenge,
+                verify_checksum,
+                verify_metrics,
+                verify_signals,
+                solution,
+            )
+
         verify_rjson = verify_response.json()
         verify_token = verify_rjson.get("token")
         self.logger.info(f"Retrieved token {verify_token}")
