@@ -43,7 +43,7 @@ class BookingScraper:
         return response
 
     def is_available(self, day_info):
-        return day_info.get("minLengthOfStay") > 0
+        return day_info.get("available")
 
     def check_availability_booking(
         self,
