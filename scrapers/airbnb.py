@@ -67,6 +67,7 @@ class AirbnbScraper:
         match = re.search(r"operationId:'([0-9a-f]+)'", text)
         if match:
             return match.group(1)
+        raise Exception("Operation id not found")
 
     def check_availability(self, tokens_json, hash_id: str):
         headers = {

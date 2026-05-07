@@ -9,8 +9,8 @@ from scrapers.airbnb import AirbnbScraper
 from scrapers.booking import BookingScraper
 
 CACHE_TTL_SECONDS = 3600
-BOOKING_CACHE_PATH = "data/airbnb.json"
-AIRBNB_CACHE_PATH = "data/booking.json"
+BOOKING_CACHE_PATH = "data/booking.json"
+AIRBNB_CACHE_PATH = "data/airbnb.json"
 
 
 calendar_options = {
