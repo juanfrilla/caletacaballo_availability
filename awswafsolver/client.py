@@ -10,7 +10,7 @@ from .checksum import crc32_calculate, get_check_sum, utf8_encoder_encode
 from .fp import adjust_fp
 from .metrics import generate_verify_metrics
 from .signals import encrypt_zoey, prepare_signals
-from .solution import retrieve_dict_from_jwttoken, solve_challenge
+from .solution import solve_challenge
 
 
 class AWSWAFSolver:
@@ -166,7 +166,6 @@ class AWSWAFSolver:
         challenge_response = self._general_request(challenge_request_url)
         challenge_rjson = challenge_response.json()
         challenge = challenge_rjson.get("challenge", {})
-        challenge_token = challenge.get("input")
         verify_url = challenge_url.replace("challenge.js", "verify")
         mp_verify_url = challenge_url.replace("challenge.js", "mp_verify")
         verify_fp = adjust_fp(self.chrome_version, self.target_url)
@@ -180,13 +179,14 @@ class AWSWAFSolver:
         verify_zoey_str = encrypt_zoey(verify_checksum_fp)
         verify_signals = prepare_signals(verify_zoey_str)
         verify_metrics = generate_verify_metrics()
-        solution = solve_challenge(challenge_token, verify_checksum)
+        solution = solve_challenge(challenge_rjson, verify_checksum)
 
-        jwt_dict = retrieve_dict_from_jwttoken(challenge_token)
-
-        challenge_type = jwt_dict.get("challenge_type")
+        challenge_type = challenge_rjson.get("challenge_type")
         self.logger.info(f"Challenge type is {challenge_type}")
-        if challenge_type in ["HashcashScrypt", "HashcashSHA2"]:
+        if challenge_type in [
+            "h7b0c470f0cfe3a80a9e26526ad185f484f6817d0832712a4a37a908786a6a67f",
+            "h72f957df656e80ba55f5d8ce2e8c7ccb59687dba3bfb273d54b08a261b2f3002",
+        ]:
             verify_response = self._verify_request(
                 verify_url,
                 challenge,
@@ -196,7 +196,10 @@ class AWSWAFSolver:
                 solution,
             )
 
-        elif challenge_type == "NetworkBandwidth":
+        elif (
+            challenge_type
+            == "ha9faaffd31b4d5ede2a2e19d2d7fd525f66fee61911511960dcbb52d3c48ce25"
+        ):
             verify_response = self._mp_verify_request(
                 mp_verify_url,
                 challenge,
